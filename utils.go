@@ -271,10 +271,14 @@ func parseDateTime(str string, loc *time.Location) (t time.Time, err error) {
 		t, err = time.Date(y, mo, d, h, mi, s, t.Nanosecond(), loc), nil
 	}
 
+	if err == nil && loc == time.UTC {
+		t = t.In(time.Local)
+	}
 	return
 }
 
 func parseBinaryDateTime(num uint64, data []byte, loc *time.Location) (driver.Value, error) {
+
 	switch num {
 	case 0:
 		return time.Time{}, nil
@@ -285,7 +289,7 @@ func parseBinaryDateTime(num uint64, data []byte, loc *time.Location) (driver.Va
 			int(data[3]),                              // day
 			0, 0, 0, 0,
 			loc,
-		), nil
+		).In(time.Local), nil
 	case 7:
 		return time.Date(
 			int(binary.LittleEndian.Uint16(data[:2])), // year
@@ -296,7 +300,7 @@ func parseBinaryDateTime(num uint64, data []byte, loc *time.Location) (driver.Va
 			int(data[6]),                              // seconds
 			0,
 			loc,
-		), nil
+		).In(time.Local), nil
 	case 11:
 		return time.Date(
 			int(binary.LittleEndian.Uint16(data[:2])), // year
@@ -307,7 +311,7 @@ func parseBinaryDateTime(num uint64, data []byte, loc *time.Location) (driver.Va
 			int(data[6]),                              // seconds
 			int(binary.LittleEndian.Uint32(data[7:11]))*1000, // nanoseconds
 			loc,
-		), nil
+		).In(time.Local), nil
 	}
 	return nil, fmt.Errorf("invalid DATETIME packet length %d", num)
 }
